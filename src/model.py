@@ -10,6 +10,8 @@ et date identiques », et l'effet quartier lui-même mesure combien un quartier 
 """
 from pathlib import Path
 
+import json
+
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -92,20 +94,51 @@ def coefficients(model, type_bien: str) -> pd.DataFrame:
     return t.reset_index(drop=True)
 
 
+def export_estimateur(models: dict, df: pd.DataFrame) -> dict:
+    """Tout ce qu'il faut pour estimer un prix sans statsmodels ni données individuelles :
+    coefficients, effets quartier, effet du dernier trimestre, correction de Duan et fourchette
+    empirique (quantiles 10-90 % du rapport prix réel / prix modèle)."""
+    dernier = sorted(df["trimestre"].unique())[-1]
+    communes = json.loads((ROOT / "data" / "raw" / "communes_mel.json").read_text(encoding="utf-8"))
+    out = {"cellule_deg": CELLULE_DEG, "trimestre_reference": dernier,
+           "communes": {c["code"]: c["nom"] for c in communes}, "types": {}}
+    for t, m in models.items():
+        p = m.params
+        ratio = np.exp(m.resid) / np.mean(np.exp(m.resid))
+        d = df[df["type"] == t]
+        base_q = sorted(d["quartier"].unique())[0]
+        base_t = sorted(d["trimestre"].unique())[0]
+        quart = {k.split("[T.")[1].rstrip("]"): v for k, v in p.items() if k.startswith("C(quartier)")}
+        quart[base_q] = 0.0
+        trim = {k.split("[T.")[1].rstrip("]"): v for k, v in p.items() if k.startswith("C(trimestre)")}
+        trim[base_t] = 0.0
+        out["types"][t] = {
+            "intercept": p["Intercept"],
+            "log_surface": p["log_surface"],
+            "dependance": p["dependance"],
+            "log_terrain": p.get("log_terrain", 0.0),
+            "pieces": {str(k): p.get(f"C(pieces_c)[T.{k}]", 0.0) for k in range(1, 7)},
+            "quartiers": quart,
+            "trimestres": trim,
+            "smearing": float(np.mean(np.exp(m.resid))),
+            "fourchette": [float(np.quantile(ratio, 0.1)), float(np.quantile(ratio, 0.9))],
+        }
+    return out
+
+
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     df = load()
-    coefs, valid, resid = [], [], []
+    coefs, valid, models = [], [], {}
     for type_bien in FORMULES:
-        m = fit(df, type_bien)
+        m = models[type_bien] = fit(df, type_bien)
         coefs.append(coefficients(m, type_bien))
         valid.append(holdout(df, type_bien))
-        d = df[df["type"] == type_bien]
-        resid.append(d.assign(residu=m.resid, prix_modele=predict_prix(m, d)))
         print(f"{type_bien}: n={int(m.nobs)}, R² ajusté={m.rsquared_adj:.3f}")
     pd.concat(coefs).to_csv(OUT / "coefficients.csv", index=False)
     pd.DataFrame(valid).to_csv(OUT / "validation.csv", index=False)
-    pd.concat(resid).to_parquet(ROOT / "data" / "processed" / "ventes_residus.parquet", index=False)
+    est = export_estimateur(models, df)
+    (OUT / "estimateur.json").write_text(json.dumps(est, ensure_ascii=False), encoding="utf-8")
     print(pd.DataFrame(valid).to_string(index=False))
     print(pd.concat(coefs).round(4).to_string(index=False))
 

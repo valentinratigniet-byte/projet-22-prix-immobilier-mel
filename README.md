@@ -9,6 +9,19 @@
 **À lire en premier** : la [note de synthèse d'une page](docs/note-decideur.md) pour un décideur, puis le
 [notebook d'analyse](notebooks/analyse_prix_mel.ipynb) pour la méthode.
 
+## 🖥️ Application
+
+Une application Streamlit (`app/app.py`) met le modèle entre les mains d'un utilisateur :
+**estimer un bien** à partir d'une adresse (géolocalisée par l'API Adresse de l'État) avec une fourchette
+honnête et un verdict sur le prix demandé, **carte des 181 quartiers** à bien égal, **indice des prix**.
+Elle n'embarque que les coefficients du modèle (`outputs/estimateur.json`) et des agrégats par quartier :
+aucune vente individuelle. Un test vérifie que son estimateur redonne les prédictions statsmodels à
+10⁻⁹ près.
+
+```bash
+streamlit run app/app.py
+```
+
 ## 📸 Aperçu
 
 ![Ce que coûte chaque quartier à bien égal](outputs/carte_quartiers_appartements.png)
@@ -81,7 +94,7 @@ python src/download.py      # DVF 2021-2025 (Nord) + communes MEL, ~15 Mo
 python src/prepare.py       # nettoyage + docs/entonnoir.csv
 python src/model.py         # modèles + validation
 cd src && python analyse.py # indice, test, quartiers, figures
-cd .. && pytest -q tests    # 9 tests : nettoyage + garde-fous sur les résultats
+cd .. && pytest -q tests    # 14 tests : nettoyage, garde-fous résultats, estimateur, application
 ```
 
 La CI GitHub Actions rejoue exactement ce pipeline à chaque push, depuis les sources publiques.
@@ -93,7 +106,9 @@ La CI GitHub Actions rejoue exactement ce pipeline à chaque push, depuis les so
 │   ├── download.py        ← DVF + communes MEL
 │   ├── prepare.py         ← DVF brut → une ligne par vente (entonnoir documenté)
 │   ├── model.py           ← régression hédonique + validation
-│   └── analyse.py         ← indice de prix, test, quartiers, figures
+│   ├── analyse.py         ← indice de prix, test, quartiers, figures
+│   └── estimateur.py      ← estimation depuis estimateur.json (stdlib, utilisée par l'application)
+├── app/app.py             ← application Streamlit (estimateur, carte, indice)
 ├── notebooks/
 │   ├── analyse_prix_mel.ipynb   ← l'analyse racontée, exécutée
 │   └── build_notebook.py        ← génère le notebook (la logique reste dans src/)
@@ -101,7 +116,7 @@ La CI GitHub Actions rejoue exactement ce pipeline à chaque push, depuis les so
 │   ├── note-decideur.md   ← synthèse d'une page
 │   └── entonnoir.csv      ← chaque filtre et ce qu'il écarte
 ├── outputs/               ← coefficients, validation, indice, quartiers, figures
-└── tests/                 ← nettoyage (cas construits à la main) + garde-fous résultats
+└── tests/                 ← nettoyage, garde-fous résultats, estimateur = statsmodels, application
 ```
 
 ---
