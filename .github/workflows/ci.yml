@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt pytest
+
+      # Pipeline complet depuis les sources publiques : DVF (data.gouv) + API Géo.
+      - name: Télécharger DVF 2021-2025 (Nord) et les communes de la MEL
+        run: python src/download.py
+
+      - name: Nettoyer (entonnoir documenté)
+        run: python src/prepare.py
+
+      - name: Estimer les modèles hédoniques et valider
+        run: python src/model.py
+
+      - name: Produire les résultats et figures
+        working-directory: src
+        run: python analyse.py
+
+      - name: Tests (nettoyage + garde-fous sur les résultats)
+        run: pytest -q tests
+

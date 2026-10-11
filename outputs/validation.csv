@@ -1,0 +1,3 @@
+type,ventes_test,erreur_mediane_modele_pct,erreur_mediane_naive_pct,part_a_10pct_modele,part_a_10pct_naive
+Appartement,5598,13.7,18.4,37.5,28.2
+Maison,9055,17.6,20.1,29.4,26.3

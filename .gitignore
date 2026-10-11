@@ -1,0 +1,9 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Données brutes DVF : retéléchargées par src/download.py, jamais versionnées
+data/raw/
+# Ventes individuelles géolocalisées : jamais publiées (conditions DVF), régénérées par src/prepare.py
+data/processed/
