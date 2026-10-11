@@ -7,9 +7,11 @@
 > conjoncture, **à bien égal** — puis le vérifie sur des ventes qu'elle n'a jamais vues.
 
 **À lire en premier** : la [note de synthèse d'une page](docs/note-decideur.md) pour un décideur, puis le
-[notebook d'analyse](notebooks/analyse_prix_mel.ipynb) pour la méthode.
+[notebook d'analyse](notebooks/analyse_prix_mel.ipynb) pour la méthode. Ou directement l'[application en ligne](https://prix-immobilier-mel.streamlit.app/).
 
 ## 🖥️ Application
+
+**▶️ [Démo live : prix-immobilier-mel.streamlit.app](https://prix-immobilier-mel.streamlit.app/)**
 
 Une application Streamlit (`app/app.py`) met le modèle entre les mains d'un utilisateur :
 **estimer un bien** à partir d'une adresse (géolocalisée par l'API Adresse de l'État) avec une fourchette
