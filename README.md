@@ -9,6 +9,8 @@
 **À lire en premier** : la [note de synthèse d'une page](docs/note-decideur.md) pour un décideur, puis le
 [notebook d'analyse](notebooks/analyse_prix_mel.ipynb) pour la méthode. Ou directement l'[application en ligne](https://prix-immobilier-mel.streamlit.app/).
 
+🗺️ **[Schéma du dépôt (GitDiagram)](https://gitdiagram.com/valentinratigniet-byte/projet-22-prix-immobilier-mel)** : vue d'ensemble générée automatiquement à partir du code.
+
 ## 🖥️ Application
 
 **▶️ [Démo live : prix-immobilier-mel.streamlit.app](https://prix-immobilier-mel.streamlit.app/)**
