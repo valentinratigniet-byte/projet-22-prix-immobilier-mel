@@ -1,0 +1,43 @@
+name: Réveil de l'application
+
+# Streamlit Community Cloud met l'application en veille après quelques heures sans visite :
+# un visiteur tomberait sur une page « Zzzz ». Un simple GET ne suffit pas à la réveiller,
+# il faut cliquer sur le bouton de réveil dans un vrai navigateur.
+on:
+  schedule:
+    - cron: "0 */8 * * *"
+  workflow_dispatch:
+
+env:
+  APP_URL: https://prix-immobilier-mel.streamlit.app/
+
+jobs:
+  reveil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer Playwright
+        run: pip install playwright && playwright install --with-deps chromium
+
+      - name: Ouvrir l'application et la réveiller si besoin
+        shell: python
+        run: |
+          import os
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as p:
+              page = p.chromium.launch().new_page()
+              page.goto(os.environ["APP_URL"], wait_until="networkidle")
+              bouton = page.get_by_role("button", name="Yes, get this app back up!")
+              if bouton.count():
+                  print("Application en veille : réveil")
+                  bouton.click()
+              else:
+                  print("Application déjà éveillée")
+              # L'application tourne dans une iframe : on attend qu'elle affiche son contenu.
+              page.frame_locator("iframe[title=streamlitApp]").locator("[data-testid='stApp']").wait_for(timeout=180_000)
+              print("Application disponible")
